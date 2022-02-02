@@ -3,23 +3,28 @@ import { useGlobalContext } from "../context";
 import Stopwatch from "./Stopwatch";
 //icons
 import { MdOutlineTimer } from "react-icons/md";
+import { collection, onSnapshot } from "firebase/firestore";
+import { useEffect, useState } from "react";
 const Leaderboard = ({ level }) => {
-  const { loading, getTopTen } = useGlobalContext();
-  const topPlayers = getTopTen(level);
+  const {db, sortPlayers } = useGlobalContext();
+  const [leaderboard, setLeaderboard] = useState([]);
 
-  if (loading) {
-    return (
-      <>
-        <h1>Loading...</h1>
-      </>
-    );
-  }
+  useEffect(() => {
+    const colRef = collection(db, `levels/level${level}/leaderboard`);
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      let data = snapshot.docs.map((doc) => doc.data());
+      data = sortPlayers(data);
+      setLeaderboard(data);
+    });
+    return () => unsubscribe();
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <div>
       <h2>Level {level}</h2>
       <ol>
-        {topPlayers
+        {leaderboard
           .map((player, index) => {
             const { name, time } = player;
             return (

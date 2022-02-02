@@ -27,7 +27,6 @@ const GameStart = () => {
           <div className="timer">
             <MdOutlineTimer />
             <h3 className="timer">
-
             <Stopwatch timer={gameTimer} />
             </h3>
           </div>

@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import levels from "./data";
+import firebaseConfig from "./firebaseConfig";
+// Initialize Firebase
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  getDoc,
+  doc,
+  collection,
+  addDoc,
+  onSnapshot,
+} from "firebase/firestore";
+// eslint-disable-next-line
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore();
+
 const AppContext = React.createContext();
 
 const AppProvider = ({ children }) => {
@@ -15,10 +30,7 @@ const AppProvider = ({ children }) => {
   const [gameStart, setGameStart] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [comingSoon, setComingSoon] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [leaderboards, setLeaderboards] = useState([]);
   const [topTen, setTopTen] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [clickPosition, setClickPosition] = useState({
     left: 0,
     top: 0,
@@ -48,20 +60,6 @@ const AppProvider = ({ children }) => {
     }
     // eslint-disable-next-line
   }, [gameStart]);
-  /* === Initialize Leaderboard === */
-  useEffect(() => {
-    setLoading(true);
-    setLeaderboards(
-      levels.map((level) => {
-        if (level) {
-          setLeaderboards([...leaderboards, level.leaderboard]);
-        }
-        return level.leaderboard;
-      })
-    );
-    setLoading(false);
-    // eslint-disable-next-line
-  }, []);
 
   /* === Alert logics === */
   const handleAlert = (show, type, msg) => {
@@ -109,7 +107,6 @@ const AppProvider = ({ children }) => {
       enterLeader(gameTimer);
       setStartTimer(false);
       setGameTimer(0);
-      handleAlert(true, "success", "Good job, you found everyone!");
     }
   };
   useEffect(() => {
@@ -141,36 +138,32 @@ const AppProvider = ({ children }) => {
   };
 
   /* === Leaderboard logics === */
-  const getTopTen = (level) => {
-    return leaderboards[level - 1]
-      ?.sort((a, b) => a.time - b.time)
-      .slice(0, 10);
+  const sortPlayers = (players) => {
+    return players.sort((a, b) => a.time - b.time).slice(0, 10);
   };
   const enterLeader = (playerTime) => {
-    const topPlayers = getTopTen(levelSelected);
-    /* Enter the leaderboard if there are less than 10 players 
-    or current time is better than player 10 */
-    if (!topPlayers[9]) {
-      setTopTen(true);
-    }
-    if (topPlayers[9] && playerTime < topPlayers[9].time) {
-      setTopTen(true);
-    }
+    let topPlayers;
+    const colRef = collection(db, `levels/level${levelSelected}/leaderboard`);
+    onSnapshot(colRef, (snapshot) => {
+      const data = snapshot.docs.map((doc) => doc.data());
+      topPlayers = sortPlayers(data);
+      if (topPlayers === undefined) {
+        topPlayers = [];
+      }
+      if (!topPlayers[9]) {
+        setTopTen(true);
+      }
+      if (topPlayers[9] && playerTime < topPlayers[9].time) {
+        setTopTen(true);
+      }
+    });
   };
   // Add player to leaderboard
-  const addLeaderboard = (e, playerName, playerTime) => {
+  const addLeaderboard = async (e, playerName, playerTime) => {
     e.preventDefault();
     const newEntry = { name: playerName, time: playerTime };
-    const currentLeaderboard = leaderboards[levelSelected - 1];
-    setLeaderboards(
-      leaderboards.map((leaderboard) => {
-        if (leaderboard === currentLeaderboard) {
-          const leaderboardUpdate = [...leaderboard, newEntry];
-          return leaderboardUpdate;
-        }
-        return leaderboard;
-      })
-    );
+    const colRef = collection(db, `levels/level${levelSelected}/leaderboard`);
+    await addDoc(colRef, newEntry);
     setTopTen(false);
   };
 
@@ -228,68 +221,65 @@ const AppProvider = ({ children }) => {
       dropdownPosition(
         "right",
         dropdownContainer,
-        (100-clickPosition.left) + 2 + "%",
+        100 - clickPosition.left + 2 + "%",
         clickPosition.top - 5 + "%"
       );
-      console.log(100 - clickPosition.left);
     }
     // eslint-disable-next-line
   }, [clickPosition]);
 
   /* === Character selection from Dropdown logics === */
-  const selectCharacter = (name) => {
-    const newSelection = characters.find(
-      (character) => character.name === name
+  const handleCharacterSelection = async (character) => {
+    const docRef = doc(
+      db,
+      `levels/level${levelSelected}/characters/${character.value}/`
     );
-    setSelectedCharacter(newSelection);
+    const getCharacter = await getDoc(docRef);
+    let docData;
+    if (getCharacter.exists()) {
+      docData = getCharacter.data();
+      checkCharacterPosition(docData.xChar, docData.yChar, character.value);
+    }
   };
-  const handleCharacterSelection = (character) => {
-    selectCharacter(character.value);
-  };
+
   // check character position & if it is found
-  const checkCharacterPosition = () => {
-    const { xChar, yChar } = selectedCharacter;
+  const checkCharacterPosition = async (xChar, yChar, character) => {
     const { left, top } = clickPosition;
     const checkX = left - 5 < xChar && xChar < left + 5;
     const checkY = top - 5 < yChar && yChar < top + 5;
     const checkXY = checkX && checkY;
-    return checkXY;
+    characterFound(checkXY, character);
   };
-  const characterFound = () => {
-    if (checkCharacterPosition()) {
-      if (!selectedCharacter.found) {
-        handleAlert(true, "success", `You found ${selectedCharacter.name}!`);
+
+  const characterFound = (isFound, character) => {
+    const charSelection = characters.find((char) => char.name === character);
+    if (isFound) {
+      if (!charSelection.found) {
+        handleAlert(true, "success", `You found ${charSelection.name}!`);
       } else {
-        handleAlert(true, "success", `Already found!`);
+        handleAlert(
+          true,
+          "success",
+          `${charSelection.name} was already found!`
+        );
       }
       setCharacters(
         characters.map((character) => {
-          if (character.id === selectedCharacter.id) {
+          if (character.id === charSelection.id) {
             return { ...character, found: true };
           }
           return character;
         })
       );
     }
-    if (!checkCharacterPosition()) {
-      if (selectedCharacter.found) {
-        handleAlert(
-          true,
-          "danger",
-          `${selectedCharacter.name} was already found!`
-        );
+    if (!isFound) {
+      if (charSelection.found) {
+        handleAlert(true, "danger", `${charSelection.name} was already found!`);
       } else {
-        handleAlert(true, "danger", `That's not ${selectedCharacter.name}!`);
+        handleAlert(true, "danger", `That's not ${charSelection.name}!`);
       }
-      setSelectedCharacter(null);
     }
   };
-  useEffect(() => {
-    if (selectedCharacter !== null) {
-      characterFound();
-    }
-    // eslint-disable-next-line
-  }, [selectedCharacter]);
 
   return (
     <AppContext.Provider
@@ -307,15 +297,14 @@ const AppProvider = ({ children }) => {
         handleGameStart,
         handleCharacterSelection,
         handleImageClick,
-        leaderboards,
         playAgain,
         restart,
         comingSoon,
-        loading,
         topTen,
         addLeaderboard,
-        getTopTen,
+        sortPlayers,
         closeDropdown,
+        db,
       }}
     >
       {children}

@@ -70,6 +70,9 @@ header {
   justify-content: space-between;
   align-items: center;
 }
+.logo-title {
+  color: var(--clr-grey-1);
+}
 .remaining-characters__title {
   font-size: 0.7rem;
   margin-bottom: 0.5rem;
@@ -151,8 +154,8 @@ header {
   font-size: 0.725rem;
   padding-left: 10px;
 }
-.close-btn{
-  border:0;
+.close-btn {
+  border: 0;
   background: none;
   float: right;
   font-size: 1.5rem;
@@ -202,6 +205,9 @@ header {
   color: var(--clr-primary-5);
   background: var(--clr-primary-8);
   border-color: var(--clr-primary-8);
+}
+.modal p {
+  text-align: center;
 }
 
 .modal .clear-time {

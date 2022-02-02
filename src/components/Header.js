@@ -1,11 +1,13 @@
 import { useGlobalContext } from "../context";
-
+import { Link } from "react-router-dom";
 const Header = () => {
   const { characters } = useGlobalContext();
   return (
     <header>
       <div className="top-header">
-        <h1>Waldo Project</h1>
+        <Link to="/" className="logo-title">
+          <h1>Waldo Project</h1>
+        </Link>
         <div className="remaining-characters__container">
           <h4 className="remaining-characters__title">Remaining characters</h4>
           <div className="remaining-characters__images">
