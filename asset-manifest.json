@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/waldo-firebase/static/css/main.7c4cb660.chunk.css",
+    "main.js": "/waldo-firebase/static/js/main.6fd877a0.chunk.js",
+    "main.js.map": "/waldo-firebase/static/js/main.6fd877a0.chunk.js.map",
+    "runtime-main.js": "/waldo-firebase/static/js/runtime-main.9d78e6ee.js",
+    "runtime-main.js.map": "/waldo-firebase/static/js/runtime-main.9d78e6ee.js.map",
+    "static/js/2.f819a304.chunk.js": "/waldo-firebase/static/js/2.f819a304.chunk.js",
+    "static/js/2.f819a304.chunk.js.map": "/waldo-firebase/static/js/2.f819a304.chunk.js.map",
+    "index.html": "/waldo-firebase/index.html",
+    "static/css/main.7c4cb660.chunk.css.map": "/waldo-firebase/static/css/main.7c4cb660.chunk.css.map",
+    "static/js/2.f819a304.chunk.js.LICENSE.txt": "/waldo-firebase/static/js/2.f819a304.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.9d78e6ee.js",
+    "static/js/2.f819a304.chunk.js",
+    "static/css/main.7c4cb660.chunk.css",
+    "static/js/main.6fd877a0.chunk.js"
+  ]
+}
