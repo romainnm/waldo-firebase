@@ -6,7 +6,7 @@ This project is part of the JavaScript Course made by [The Odin Project](www.the
 
 <img src="https://image.flaticon.com/icons/png/512/136/136528.png" width="25"><img src="https://image.flaticon.com/icons/png/512/136/136527.png" width="25"><img src="https://cdn-icons-png.flaticon.com/512/919/919851.png" width="25">
 
-**Live demo:** [Click here to see the demo](https://romainnm.github.io/waldo-game) :heart:
+**Live demo:** [Click here to see the demo](https://romainnm.github.io/waldo-firebase) :heart:
 
 ## Assignment
 
